@@ -5,8 +5,15 @@ import { useParams } from 'react-router-dom';
 import { Profile } from '../Types/Profile';
 import { PaginationComponent } from '../Components/Pagination';
 import { StyledLink } from '../Components/StyledLink';
-import { handleClick } from '../utils/handleClick'; 
-import cn from 'classnames';
+import { handleSort } from '../utils/handleSort';
+import { ColumnButton } from '../Components/ColumnButton';
+
+const ColumnNames = [
+  { columnName: 'ID', sortValue: 'profileID'},
+  { columnName: 'Country', sortValue: 'country'},
+  { columnName: 'Marketplace', sortValue: 'marketplace'},
+  { columnName: 'Date', sortValue: 'date'},
+];
 
 const ProfilesPage: React.FC = () => {
   const { AccountId } = useParams();
@@ -30,29 +37,7 @@ const ProfilesPage: React.FC = () => {
       .finally(() => setIsLoading(false))
   }, [AccountId]);
 
-  const handleSort = () => {
-    if (sortColumn === '') {
-      return originalProfiles;
-    }
-
-    const copy = [...originalProfiles];
-
-    return copy.sort((a, b) => {
-      switch (sortColumn) {
-        case "profileID":
-          return sortOrder === 'desc' ? +b.profileID - +a.profileID : +a.profileID - +b.profileID;
-        case "marketplace":
-        case "country":
-          return sortOrder === 'desc' 
-          ? b[sortColumn].toString().localeCompare(a[sortColumn].toString()) 
-          : a[sortColumn].toString().localeCompare(b[sortColumn].toString())
-        default:
-          return 1;
-      }
-    })
-  };
-
-  const sortedProfiles = handleSort()
+  const sortedProfiles = handleSort(sortColumn as keyof Profile, sortOrder, originalProfiles)
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilterValue(e.target.value);
@@ -104,45 +89,16 @@ const ProfilesPage: React.FC = () => {
       <Table striped bordered hover>
         <thead>
           <tr>
-            <th 
-              role='button'
-              onClick={() => handleClick('profileID', setSortOrder, setSortColumn, sortColumn, sortOrder)}
-            >
-              ID
-              <i className={cn("bi", 
-                {'bi-sort-down' : (sortColumn === 'profileID' && sortOrder === 'asc'),
-                  'bi-sort-up' : (sortColumn === 'profileID' && sortOrder === 'desc')
-                })}
-              >
-
-              </i>
-            </th>
-            <th 
-              role='button'
-              onClick={() => handleClick('country', setSortOrder, setSortColumn, sortColumn, sortOrder)}
-            >
-              Country
-              <i className={cn("bi", 
-                {'bi-sort-down' : (sortColumn === 'country' && sortOrder === 'asc'),
-                  'bi-sort-up' : (sortColumn === 'country' && sortOrder === 'desc')
-                })}
-              >
-
-              </i>
-            </th>
-            <th 
-              role='button'
-              onClick={() => handleClick('marketplace', setSortOrder, setSortColumn, sortColumn, sortOrder)}
-            >
-              Marketplace
-              <i className={cn("bi", 
-                {'bi-sort-down' : (sortColumn === 'marketplace' && sortOrder === 'asc'),
-                  'bi-sort-up' : (sortColumn === 'marketplace' && sortOrder === 'desc')
-                })}
-              >
-
-              </i>
-            </th>
+            {ColumnNames.map(column => (
+              <ColumnButton 
+                sortValue={column.sortValue}
+                columnName={column.columnName}
+                setSortColumn={setSortColumn}
+                setSortOrder={setSortOrder}
+                sortColumn={sortColumn}
+                sortOrder={sortOrder}
+              />
+            ))}
           </tr>
         </thead>
           <tbody>

@@ -1,30 +1,41 @@
-# React + TypeScript + Vite
+# Accounts Management App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Description
 
-Currently, two official plugins are available:
+This is a simple web application for managing user accounts. You can view, sort, and filter the list of accounts, as well as navigate to detailed information for each account.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Installation
 
-## Expanding the ESLint configuration
+1. Clone the repository:
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+   ```bash
+   git clone https://github.com/sintax1s/React_tablePages.git
+   ```
 
-- Configure the top-level `parserOptions` property like this:
+2. Navigate to the application directory:
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
+    ```bash
+    cd React_tablePages
+    ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+3. Install dependencies:
+
+    ```bash
+    npm install
+    ```
+
+## Usage
+
+# Run the application:
+
+
+    npm start
+
+  Open your browser and navigate to http://localhost:3000 to use the application.
+
+# Features
+View a paginated list of user accounts.
+Sort accounts by different columns (ID, Email, Auth Token, Creation Date).
+Filter accounts by email.
+Navigate to detailed profiles by clicking on account links.
+Feel free to explore and customize the application as needed!

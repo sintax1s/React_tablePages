@@ -5,7 +5,15 @@ import { Account } from '../Types/Account';
 import { PaginationComponent } from '../Components/Pagination';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { StyledLink } from '../Components/StyledLink';
-import cn from 'classnames';
+import { ColumnButton } from '../Components/ColumnButton';
+import { handleSort } from '../utils/handleSort';
+
+const ColumnNames = [
+  { columnName: 'ID', sortValue: 'accountId'},
+  { columnName: 'Email', sortValue: 'email'},
+  { columnName: 'Auth Token', sortValue: 'authToken'},
+  { columnName: 'Creation Date', sortValue: 'creationDate'},
+];
 
 const AccountsPage: React.FC = () => {
   const [originalAccounts, setOriginalAccounts] = useState<Account[]>([]);
@@ -25,30 +33,7 @@ const AccountsPage: React.FC = () => {
       .finally(() => setIsLoading(false))
   }, []);
 
-  const handleSort = () => {
-    if (sortColumn === '') {
-      return originalAccounts;
-    }
-
-    const copy = [...originalAccounts];
-
-    return copy.sort((a, b) => {
-      switch (sortColumn) {
-        case "accountId":
-          return sortOrder === 'desc' ? +b.accountId - +a.accountId : +a.accountId - +b.accountId;
-        case "authToken":
-        case "email":
-        case "creationDate":
-          return sortOrder === 'desc' 
-          ? b[sortColumn].toString().localeCompare(a[sortColumn].toString()) 
-          : a[sortColumn].toString().localeCompare(b[sortColumn].toString())
-        default:
-          return 1;
-      }
-    })
-  };
-
-  const sortedAccounts = handleSort();
+  const sortedAccounts = handleSort(sortColumn as keyof Account, sortOrder, originalAccounts);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilterValue(e.target.value);
@@ -79,145 +64,54 @@ const AccountsPage: React.FC = () => {
       )
       : (
         <>
-                <div className="mb-3">
-        <label htmlFor="exampleInputEmail1" className="form-label">Filter by Email</label>
-        <input
-          type="email"
-          className="form-control"
-          id="exampleInputEmail1"
-          aria-describedby="emailHelp"
-          value={filterValue}
-          onChange={handleFilterChange}
-        />
-      </div>
-      <Table striped bordered hover>
-        <thead>
-          <tr>
-            <th 
-              role='button' 
-              onClick={() => {
-                setSortColumn('accountId');
-                setSortOrder('asc');
-                
-                if (sortColumn === 'accountId' && sortOrder === 'asc') {
-                  setSortOrder('desc');
-                }
-
-                if ((sortColumn === 'accountId' && sortOrder === 'desc')) {
-                  setSortOrder('');
-                  setSortColumn('');
-                }
-              }}
-              
-            >
-              ID
-              <i className={cn("bi", 
-                {'bi-sort-down' : (sortColumn === 'accountId' && sortOrder === 'asc'),
-                  'bi-sort-up' : (sortColumn === 'accountId' && sortOrder === 'desc')
-                })}
-              >
-
-              </i>
-            </th>
-            <th 
-              role='button' 
-              onClick={() => {
-                setSortColumn('email');
-                setSortOrder('asc');
-                
-                if (sortColumn === 'email' && sortOrder === 'asc') {
-                  setSortOrder('desc');
-                }
-
-                if ((sortColumn === 'email' && sortOrder === 'desc')) {
-                  setSortOrder('');
-                  setSortColumn('');
-                }
-              }}
-            >
-              Email
-              <i className={cn("bi", 
-                {'bi-sort-down' : (sortColumn ===  'email' && sortOrder === 'asc'),
-                  'bi-sort-up' : (sortColumn ===  'email' && sortOrder === 'desc')
-                })}
-              >
-
-              </i>
-            </th>
-            <th 
-              role='button' 
-              onClick={() => {
-                setSortColumn('authToken');
-                setSortOrder('asc');
-                
-                if (sortColumn === 'authToken' && sortOrder === 'asc') {
-                  setSortOrder('desc');
-                }
-
-                if ((sortColumn === 'authToken' && sortOrder === 'desc')) {
-                  setSortOrder('');
-                  setSortColumn('');
-                }
-              }}
-            >
-              Auth Token
-              <i className={cn("bi", 
-                {'bi-sort-down' : (sortColumn ===  'authToken' && sortOrder === 'asc'),
-                  'bi-sort-up' : (sortColumn ===  'authToken' && sortOrder === 'desc')
-                })}
-              >
-
-              </i>
-            </th>
-            <th 
-              role='button' 
-              onClick={() => {
-                setSortColumn('creationDate');
-                setSortOrder('asc');
-                
-                if (sortColumn === 'creationDate' && sortOrder === 'asc') {
-                  setSortOrder('desc');
-                }
-
-                if ((sortColumn === 'creationDate' && sortOrder === 'desc')) {
-                  setSortOrder('');
-                  setSortColumn('');
-                }
-              }}
-            >
-              Creation Date
-              <i className={cn("bi", 
-                {'bi-sort-down' : (sortColumn ===  'creationDate' && sortOrder === 'asc'),
-                  'bi-sort-up' : (sortColumn ===  'creationDate' && sortOrder === 'desc')
-                })}
-              >
-
-              </i>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedAccounts.map((account) => {
-            const date = new Date(account.creationDate)
-            .toString().split(' ').slice(0, 5).join(' ');
+          <div className="mb-3">
+            <label htmlFor="exampleInputEmail1" className="form-label">Filter by Email</label>
+            <input
+              type="email"
+              className="form-control"
+              id="exampleInputEmail1"
+              aria-describedby="emailHelp"
+              value={filterValue}
+              onChange={handleFilterChange}
+            />
+          </div>
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                {ColumnNames.map((column) => (
+                  <ColumnButton 
+                    sortValue={column.sortValue}
+                    columnName={column.columnName}
+                    setSortColumn={setSortColumn}
+                    setSortOrder={setSortOrder}
+                    sortColumn={sortColumn}
+                    sortOrder={sortOrder}
+                  />
+                ))}            
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedAccounts.map((account) => {
+                const date = new Date(account.creationDate)
+                .toString().split(' ').slice(0, 5).join(' ');
 
 
-            return(
-            <tr key={account.accountId}>
-              <td><StyledLink to={`/Profiles/${account.accountId}`}>{account.accountId}</StyledLink></td>
-              <td><StyledLink to={`/Profiles/${account.accountId}`}>{account.email}</StyledLink></td>
-              <td><StyledLink to={`/Profiles/${account.accountId}`}>{account.authToken}</StyledLink></td>
-              <td><StyledLink to={`/Profiles/${account.accountId}`}>{date.toString()}</StyledLink></td>
-            </tr>
-          )})}
-        </tbody>
-      </Table>
+                return(
+                <tr key={account.accountId}>
+                  <td><StyledLink to={`/Profiles/${account.accountId}`}>{account.accountId}</StyledLink></td>
+                  <td><StyledLink to={`/Profiles/${account.accountId}`}>{account.email}</StyledLink></td>
+                  <td><StyledLink to={`/Profiles/${account.accountId}`}>{account.authToken}</StyledLink></td>
+                  <td><StyledLink to={`/Profiles/${account.accountId}`}>{date.toString()}</StyledLink></td>
+                </tr>
+              )})}
+            </tbody>
+          </Table>
 
-      <PaginationComponent 
-        totalPages={totalPages} 
-        currentPage={currentPage}
-        goToPage={goToPage}
-      />
+          <PaginationComponent 
+            totalPages={totalPages} 
+            currentPage={currentPage}
+            goToPage={goToPage}
+          />
         </>
       )
     }

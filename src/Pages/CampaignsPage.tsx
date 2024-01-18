@@ -4,8 +4,15 @@ import { Table } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PaginationComponent } from '../Components/Pagination';
 import { Campaign } from '../Types/Campaign';
-import { handleClick } from '../utils/handleClick';
-import cn from 'classnames';
+import { ColumnButton } from '../Components/ColumnButton';
+import { handleSort } from '../utils/handleSort';
+
+const ColumnNames = [
+  { columnName: 'ID', sortValue: 'campaignId'},
+  { columnName: 'Clicks', sortValue: 'clicks'},
+  { columnName: 'Cost', sortValue: 'cost'},
+  { columnName: 'Date', sortValue: 'date'},
+];
 
 const CampaignsPage: React.FC = () => {
   const { ProfileId } = useParams();
@@ -29,31 +36,7 @@ const CampaignsPage: React.FC = () => {
       .finally(() => setIsLoading(false))
   }, [ProfileId]);
 
-  const handleSort = () => {
-    if (sortColumn === '') {
-      return originalCampaigns;
-    }
-
-    const copy = [...originalCampaigns];
-
-    return copy.sort((a, b) => {
-      switch (sortColumn) {
-        case "accountId":
-        case "cost":
-        case "clicks":
-          return sortOrder === 'desc' ? +b.campaignId - +a.campaignId : +a.campaignId - +b.campaignId;
-
-        case "date":
-          return sortOrder === 'desc' 
-          ? b[sortColumn].toString().localeCompare(a[sortColumn].toString()) 
-          : a[sortColumn].toString().localeCompare(b[sortColumn].toString())
-        default:
-          return 1;
-      }
-    })
-  };
-
-  const sortedCampaigns = handleSort();
+  const sortedCampaigns = handleSort(sortColumn as keyof Campaign, sortOrder, originalCampaigns);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilterValue(e.target.value);
@@ -91,102 +74,60 @@ const CampaignsPage: React.FC = () => {
       : (
         <>
           <nav aria-label="breadcrumb">
-      <ol className="breadcrumb">
-        <li className="breadcrumb-item"><a href="#">Accounts</a></li>
-        <li className="breadcrumb-item" onClick={handleGoBack} style={{ cursor: 'pointer' }}>
-          <a style={{ color: 'blue', textDecoration: 'underline'}}>Profiles</a>
-        </li>
-        <li className="breadcrumb-item active" aria-current="page">Campaigns</li>
-      </ol>
-    </nav>
-      <div className="mb-3">
-        <label htmlFor="exampleInputEmail1" className="form-label">Filter by Cost</label>
-        <input
-          type="email"
-          className="form-control"
-          id="exampleInputEmail1"
-          aria-describedby="emailHelp"
-          value={filterValue}
-          onChange={handleFilterChange}
-        />
-      </div>
-      <Table striped bordered hover>
-        <thead>
-          <tr>
-            <th 
-              role='button'
-              onClick={() => handleClick('campaignId', setSortOrder, setSortColumn, sortColumn, sortOrder)}
-            >
-              ID
-              <i className={cn("bi", 
-                {'bi-sort-down' : (sortColumn === 'campaignId' && sortOrder === 'asc'),
-                  'bi-sort-up' : (sortColumn === 'campaignId' && sortOrder === 'desc')
-                })}
-              >
+            <ol className="breadcrumb">
+              <li className="breadcrumb-item"><a href="#">Accounts</a></li>
+              <li className="breadcrumb-item" onClick={handleGoBack} style={{ cursor: 'pointer' }}>
+                <a style={{ color: 'blue', textDecoration: 'underline'}}>Profiles</a>
+              </li>
+              <li className="breadcrumb-item active" aria-current="page">Campaigns</li>
+            </ol>
+          </nav>
+          <div className="mb-3">
+            <label htmlFor="exampleInputEmail1" className="form-label">Filter by Cost</label>
+            <input
+              type="email"
+              className="form-control"
+              id="exampleInputEmail1"
+              aria-describedby="emailHelp"
+              value={filterValue}
+              onChange={handleFilterChange}
+            />
+          </div>
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                {ColumnNames.map(column => (
+                    <ColumnButton 
+                    sortValue={column.sortValue}
+                    columnName={column.columnName}
+                    setSortColumn={setSortColumn}
+                    setSortOrder={setSortOrder}
+                    sortColumn={sortColumn}
+                    sortOrder={sortOrder}
+                  />
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedCampaigns.map((campaign) => {
+                const date = new Date(campaign.date)
+                .toString().split(' ').slice(0, 5).join(' ');
+              return(
+                <tr key={campaign.campaignId} >
+                  <td>{campaign.campaignId}</td>             
+                  <td>{campaign.clicks}</td>
+                  <td>{campaign.cost}</td>
+                  <td>{date}</td>
+                </tr>
+              )})}
+            </tbody>
+          </Table>
 
-              </i>
-            </th>
-            <th 
-              role='button'
-              onClick={() => handleClick('clicks', setSortOrder, setSortColumn, sortColumn, sortOrder)}
-            >
-              Clicks
-              <i className={cn("bi", 
-                {'bi-sort-down' : (sortColumn === 'clicks' && sortOrder === 'asc'),
-                  'bi-sort-up' : (sortColumn === 'clicks' && sortOrder === 'desc')
-                })}
-              >
-
-              </i>
-            </th>
-            <th 
-              role='button'
-              onClick={() => handleClick('cost', setSortOrder, setSortColumn, sortColumn, sortOrder)}
-            > 
-              Cost
-              <i className={cn("bi", 
-                {'bi-sort-down' : (sortColumn === 'cost' && sortOrder === 'asc'),
-                  'bi-sort-up' : (sortColumn === 'cost' && sortOrder === 'desc')
-                })}
-              >
-
-              </i>
-            </th>
-            <th 
-              role='button'
-              onClick={() => handleClick('date', setSortOrder, setSortColumn, sortColumn, sortOrder)}
-            >
-              Date
-              <i className={cn("bi", 
-                {'bi-sort-down' : (sortColumn === 'date' && sortOrder === 'asc'),
-                  'bi-sort-up' : (sortColumn === 'date' && sortOrder === 'desc')
-                })}
-              >
-
-              </i>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedCampaigns.map((campaign) => {
-            const date = new Date(campaign.date)
-            .toString().split(' ').slice(0, 5).join(' ');
-          return(
-            <tr key={campaign.campaignId} >
-              <td>{campaign.campaignId}</td>             
-              <td>{campaign.clicks}</td>
-              <td>{campaign.cost}</td>
-              <td>{date}</td>
-            </tr>
-          )})}
-        </tbody>
-      </Table>
-
-      <PaginationComponent
-        totalPages={totalPages} 
-        currentPage={currentPage}
-        goToPage={goToPage}
-      />
+          <PaginationComponent
+            totalPages={totalPages} 
+            currentPage={currentPage}
+            goToPage={goToPage}
+          />
         </>
       )
     }
