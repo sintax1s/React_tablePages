@@ -12,7 +12,6 @@ const ColumnNames = [
   { columnName: 'ID', sortValue: 'profileID'},
   { columnName: 'Country', sortValue: 'country'},
   { columnName: 'Marketplace', sortValue: 'marketplace'},
-  { columnName: 'Date', sortValue: 'date'},
 ];
 
 const ProfilesPage: React.FC = () => {
