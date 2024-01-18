@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button } from 'react-bootstrap';
+import { Table } from 'react-bootstrap';
 import axios from 'axios';
 import { Account } from '../Types/Account';
-/* import { sortData } from '../utils/sortData'; */
 import { PaginationComponent } from '../Components/Pagination';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { StyledLink } from '../Components/StyledLink';
+import cn from 'classnames';
 
 const AccountsPage: React.FC = () => {
   const [originalAccounts, setOriginalAccounts] = useState<Account[]>([]);
-  const [sortedAccounts, setSortedAccounts] = useState<Account[]>([]);
   const [sortOrder, setSortOrder] = useState<'desc'| 'asc' | ''>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [sortColumn, setSortColumn] = useState('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(3);
@@ -21,25 +21,41 @@ const AccountsPage: React.FC = () => {
       .then((data) => {
         setOriginalAccounts(data.data);
       })
+      .catch((error) => console.log(error))
+      .finally(() => setIsLoading(false))
   }, []);
 
-  const handleSort = (columnName: keyof Account) => {
-    const sorted = [...sortedAccounts].sort((a, b) => {
-      if (columnName === 'accountId') {
-        return sortOrder === 'asc' ? Number(a.accountId) - Number(b.accountId) : Number(b.accountId) - Number(a.accountId);
-      }
-      return sortOrder === 'asc' ? a[columnName].toString().localeCompare(b[columnName].toString()) : b[columnName].toString().localeCompare(a[columnName].toString());
-    });
+  const handleSort = () => {
+    if (sortColumn === '') {
+      return originalAccounts;
+    }
 
-    setSortedAccounts(sorted);
+    const copy = [...originalAccounts];
+
+    return copy.sort((a, b) => {
+      switch (sortColumn) {
+        case "accountId":
+          return sortOrder === 'desc' ? +b.accountId - +a.accountId : +a.accountId - +b.accountId;
+        case "authToken":
+        case "email":
+        case "creationDate":
+          return sortOrder === 'desc' 
+          ? b[sortColumn].toString().localeCompare(a[sortColumn].toString()) 
+          : a[sortColumn].toString().localeCompare(b[sortColumn].toString())
+        default:
+          return 1;
+      }
+    })
   };
+
+  const sortedAccounts = handleSort();
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilterValue(e.target.value);
     setCurrentPage(1);
   };
-
-  const filteredAccounts = originalAccounts.filter(account =>
+  
+  const filteredAccounts = sortedAccounts.filter(account =>
     account.email.toLowerCase().includes(filterValue.toLowerCase())
   );
 
@@ -50,12 +66,20 @@ const AccountsPage: React.FC = () => {
     setCurrentPage(page);
   };
 
-  console.log(sortOrder, sortColumn)
-
   return (
     <div>
       <h1>Accounts</h1>
-      <div className="mb-3">
+      {isLoading 
+      ? (
+        <div className="d-flex justify-content-center align-items-center vh-100">
+            <div className="spinner-border" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+        </div>
+      )
+      : (
+        <>
+                <div className="mb-3">
         <label htmlFor="exampleInputEmail1" className="form-label">Filter by Email</label>
         <input
           type="email"
@@ -72,62 +96,103 @@ const AccountsPage: React.FC = () => {
             <th 
               role='button' 
               onClick={() => {
-                handleSort('accountId');
-                setSortColumn(() => 'accountId');
+                setSortColumn('accountId');
+                setSortOrder('asc');
+                
+                if (sortColumn === 'accountId' && sortOrder === 'asc') {
+                  setSortOrder('desc');
+                }
 
-
-                  if (sortColumn === 'accountId') {
-                    setSortOrder(() => 'asc');
-                  }
-                  
-                  if (sortColumn === 'accountId' && sortOrder === 'asc') {
-                    setSortOrder(() => 'desc');
-                  }
-  
-                  if ((sortColumn === 'accountId' && sortOrder === 'desc')) {
-                    console.log('dwad')
-                    setSortOrder(() => '');
-                  }
-
-
+                if ((sortColumn === 'accountId' && sortOrder === 'desc')) {
+                  setSortOrder('');
+                  setSortColumn('');
+                }
               }}
               
             >
-              ID {[sortColumn, sortOrder]}
-              <i className="bi bi-sort-down"></i>
+              ID
+              <i className={cn("bi", 
+                {'bi-sort-down' : (sortColumn === 'accountId' && sortOrder === 'asc'),
+                  'bi-sort-up' : (sortColumn === 'accountId' && sortOrder === 'desc')
+                })}
+              >
+
+              </i>
             </th>
             <th 
               role='button' 
               onClick={() => {
                 setSortColumn('email');
-            
-                if (sortColumn === 'email' && sortOrder === '') {
-                  setSortOrder('asc');
-                } else if (sortColumn === 'email' && sortOrder === 'asc') {
+                setSortOrder('asc');
+                
+                if (sortColumn === 'email' && sortOrder === 'asc') {
                   setSortOrder('desc');
-                } else {
-                  setSortOrder('');
                 }
-            
-                handleSort('email');
+
+                if ((sortColumn === 'email' && sortOrder === 'desc')) {
+                  setSortOrder('');
+                  setSortColumn('');
+                }
               }}
             >
               Email
-              <i className="bi bi-sort-down"></i>
+              <i className={cn("bi", 
+                {'bi-sort-down' : (sortColumn ===  'email' && sortOrder === 'asc'),
+                  'bi-sort-up' : (sortColumn ===  'email' && sortOrder === 'desc')
+                })}
+              >
+
+              </i>
             </th>
             <th 
               role='button' 
-              onClick={() => handleSort('authToken')}
+              onClick={() => {
+                setSortColumn('authToken');
+                setSortOrder('asc');
+                
+                if (sortColumn === 'authToken' && sortOrder === 'asc') {
+                  setSortOrder('desc');
+                }
+
+                if ((sortColumn === 'authToken' && sortOrder === 'desc')) {
+                  setSortOrder('');
+                  setSortColumn('');
+                }
+              }}
             >
               Auth Token
-              <i className="bi bi-sort-down"></i>
+              <i className={cn("bi", 
+                {'bi-sort-down' : (sortColumn ===  'authToken' && sortOrder === 'asc'),
+                  'bi-sort-up' : (sortColumn ===  'authToken' && sortOrder === 'desc')
+                })}
+              >
+
+              </i>
             </th>
             <th 
               role='button' 
-              onClick={() => handleSort('creationDate')}
+              onClick={() => {
+                setSortColumn('creationDate');
+                setSortOrder('asc');
+                
+                if (sortColumn === 'creationDate' && sortOrder === 'asc') {
+                  setSortOrder('desc');
+                }
+
+                if ((sortColumn === 'creationDate' && sortOrder === 'desc')) {
+                  setSortOrder('');
+                  setSortColumn('');
+                }
+              }}
             >
               Creation Date
-              <i className="bi bi-sort-down"></i>
+              <i className={cn("bi", 
+                {'bi-sort-down' : (sortColumn ===  'creationDate' && sortOrder === 'asc'),
+                  'bi-sort-up' : (sortColumn ===  'creationDate' && sortOrder === 'desc')
+                })}
+              >
+
+              </i>
             </th>
           </tr>
         </thead>
@@ -153,10 +218,9 @@ const AccountsPage: React.FC = () => {
         currentPage={currentPage}
         goToPage={goToPage}
       />
-
-      <Button variant="primary">
-        На головну
-      </Button>
+        </>
+      )
+    }
     </div>
   );
 };

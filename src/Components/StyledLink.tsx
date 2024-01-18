@@ -7,7 +7,7 @@ type props = {
 };
 
 export const StyledLink: React.FC<props> = ({ to, children }) => (
-  <Link style={{ textDecoration: 'none', color: 'inherit' }} to={to}>
+  <Link style={{ textDecoration: 'none', color: 'inherit'}} to={to}>
     {children}
   </Link>
 );
